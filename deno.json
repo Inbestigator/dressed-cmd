@@ -1,0 +1,12 @@
+{
+  "name": "@dressed/cmd",
+  "version": "0.1.0",
+  "exports": {
+    ".": "./mod.ts"
+  },
+  "imports": {
+    "@dressed/dressed": "jsr:@dressed/dressed@^0.1.0",
+    "commander": "npm:commander@^12.1.0",
+    "ora": "npm:ora@^8.1.1"
+  }
+}
