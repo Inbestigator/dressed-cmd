@@ -9,7 +9,7 @@ program.name("dressed").description("An HTTP Discord bot framework.");
 
 program
   .command("build")
-  .description("Builds the bot imports.")
+  .description("Builds the bot and writes to a bot.gen.ts")
   .option(
     "-i, --instance",
     "Include an instance create in the generated file",
