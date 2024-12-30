@@ -5,7 +5,7 @@
     ".": "./mod.ts"
   },
   "imports": {
-    "@dressed/dressed": "jsr:@dressed/dressed@^0.1.1",
+    "@dressed/dressed": "jsr:@dressed/dressed@^1.0.0",
     "@std/fmt": "jsr:@std/fmt@^1.0.3",
     "commander": "npm:commander@^12.1.0",
     "ora": "npm:ora@^8.1.1"
