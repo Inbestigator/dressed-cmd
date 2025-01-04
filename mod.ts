@@ -1,13 +1,13 @@
 import ora from "ora";
 import { Command } from "commander";
-import { build } from "@dressed/dressed";
+import { build } from "@dressed/dressed/server";
 import { writeFile } from "node:fs/promises";
 import { green } from "@std/fmt/colors";
 import { dirname, join } from "node:path";
 
 const program = new Command();
 
-program.name("dressed").description("An HTTP Discord bot framework.");
+program.name("dressed").description("A serverless Discord bot framework.");
 
 program
   .command("build")
