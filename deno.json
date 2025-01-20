@@ -1,9 +1,7 @@
 {
   "name": "@dressed/cmd",
-  "version": "0.1.7",
-  "exports": {
-    ".": "./mod.ts"
-  },
+  "version": "0.1.8",
+  "exports": "./mod.ts",
   "imports": {
     "@dressed/dressed": "jsr:@dressed/dressed@^1.0.10",
     "@std/fmt": "jsr:@std/fmt@^1.0.3",
@@ -11,9 +9,6 @@
     "ora": "npm:ora@^8.1.1"
   },
   "publish": {
-    "exclude": [
-      ".github",
-      ".gitattributes"
-    ]
+    "exclude": [".github", ".gitattributes"]
   }
 }
