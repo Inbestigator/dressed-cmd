@@ -1,6 +1,6 @@
 {
   "name": "@dressed/cmd",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "exports": "./mod.ts",
   "imports": {
     "@dressed/dressed": "jsr:@dressed/dressed@^1.1.4",
