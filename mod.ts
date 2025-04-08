@@ -15,8 +15,18 @@ program
   .description("Builds the bot and writes to a bot.gen.ts")
   .option("-i, --instance", "Include an instance create in the generated file")
   .option("-r, --register", "Register slash commands")
-  .action(async ({ instance, register }) => {
-    const outputContent = await build(instance, register);
+  .option(
+    "-e, --endpoint <endpoint>",
+    "The endpoint to listen on, defaults to `/`",
+  )
+  .option("-p, --port <port>", "The port to listen on, defaults to `8000`")
+  .action(async ({ instance, register, endpoint, port }) => {
+    if (port && isNaN(Number(port))) {
+      ora("Port must be a valid number").fail();
+      exit();
+    }
+    port = port ? Number(port) : undefined;
+    const outputContent = await build(instance, register, { endpoint, port });
     const writing = ora("Writing to bot.gen.ts");
     await writeFile("./bot.gen.ts", new TextEncoder().encode(outputContent));
     writing.succeed("Wrote to bot.gen.ts");
