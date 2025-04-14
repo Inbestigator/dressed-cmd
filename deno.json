@@ -1,11 +1,11 @@
 {
   "name": "@dressed/cmd",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "exports": "./mod.ts",
   "imports": {
-    "@dressed/dressed": "jsr:@dressed/dressed@^1.1.4",
+    "@dressed/dressed": "jsr:@dressed/dressed@^1.2.1",
     "@std/fmt": "jsr:@std/fmt@^1.0.3",
-    "commander": "npm:commander@^12.1.0",
+    "commander": "npm:commander@^13.1.0",
     "ora": "npm:ora@^8.1.1"
   },
   "publish": {

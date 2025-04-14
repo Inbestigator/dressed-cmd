@@ -20,13 +20,21 @@ program
     "The endpoint to listen on, defaults to `/`",
   )
   .option("-p, --port <port>", "The port to listen on, defaults to `8000`")
-  .action(async ({ instance, register, endpoint, port }) => {
+  .option(
+    "-R, --root <endpoint>",
+    "Source root for the bot, defaults to `src`",
+  )
+  .action(async ({ instance, register, endpoint, port, root }) => {
     if (port && isNaN(Number(port))) {
       ora("Port must be a valid number").fail();
       exit();
     }
     port = port ? Number(port) : undefined;
-    const outputContent = await build(instance, register, { endpoint, port });
+    const outputContent = await build(instance, register, {
+      endpoint,
+      port,
+      root,
+    });
     const writing = ora("Writing to bot.gen.ts");
     await writeFile("./bot.gen.ts", new TextEncoder().encode(outputContent));
     writing.succeed("Wrote to bot.gen.ts");
