@@ -5,6 +5,8 @@ import { writeFile } from "node:fs/promises";
 import { green } from "@std/fmt/colors";
 import { dirname, join } from "node:path";
 import { cwd, exit } from "node:process";
+import inquirer from "inquirer";
+import parseString from "parse-env-string";
 
 const program = new Command();
 
@@ -21,10 +23,14 @@ program
   )
   .option("-p, --port <port>", "The port to listen on, defaults to `8000`")
   .option(
-    "-R, --root <endpoint>",
+    "-R, --root <root>",
     "Source root for the bot, defaults to `src`",
   )
-  .action(async ({ instance, register, endpoint, port, root }) => {
+  .option(
+    "-D, --dest <dest>",
+    "Output file, defaults to `bot.gen.ts`",
+  )
+  .action(async ({ instance, register, endpoint, port, root, dest }) => {
     if (port && isNaN(Number(port))) {
       ora("Port must be a valid number").fail();
       exit();
@@ -36,7 +42,10 @@ program
       root,
     });
     const writing = ora("Writing to bot.gen.ts");
-    await writeFile("./bot.gen.ts", new TextEncoder().encode(outputContent));
+    await writeFile(
+      dest ?? "bot.gen.ts",
+      new TextEncoder().encode(outputContent),
+    );
     writing.succeed("Wrote to bot.gen.ts");
     exit();
   });
@@ -46,10 +55,7 @@ program
   .description("Clone a new bot from the examples repository")
   .argument("[template]", "Template name (deno/economy)")
   .argument("[name]", "Project name")
-  .option("-t, --token <token>", "Bot token")
-  .option("-i, --id <id>", "Bot ID")
-  .option("-k, --key <key>", "Bot public key")
-  .action(async (name, template, { token, id, key }) => {
+  .action(async (name, template) => {
     if (!name) {
       name = prompt("Project name:");
     }
@@ -57,29 +63,52 @@ program
       console.log("Project name cannot be empty.");
       Deno.exit(1);
     }
-    if (!template) {
-      template = prompt("Template:");
-    }
-    if (!template) {
-      console.log("Template cannot be empty. Are you sure you it's correct?");
-      Deno.exit(1);
+    if (
+      !template ||
+      (!template.startsWith("node/") && !template.startsWith("deno/"))
+    ) {
+      const isDeno = confirm("Would you like to use a Deno specific template?");
+      const res = await fetch(
+        `https://api.github.com/repos/inbestigator/dressed-examples/contents/${
+          isDeno ? "deno" : "node"
+        }`,
+      );
+      if (!res.ok) {
+        console.error("Failed to list templates.");
+        Deno.exit(1);
+      }
+      const files =
+        (await res.json() as { name: string; path: string; type: string }[])
+          .filter((f) => f.type === "dir");
+      ({ template } = await inquirer.prompt([{
+        message: "Select the template to use",
+        type: "select",
+        name: "template",
+        choices: files.map((f) => ({
+          name: f.name,
+          value: f.path,
+        })),
+      }]));
     }
     const res = await fetch(
-      `https://api.github.com/repos/inbestigator/dressed-examples/contents/${template}`,
+      `https://raw.githubusercontent.com/inbestigator/dressed-examples/main/${template}/.env.example`,
     );
     if (!res.ok) {
       console.error("Failed to fetch template.");
       Deno.exit(1);
     }
-    if (!token) {
-      token = prompt("Bot token (optional):");
-    }
-    if (!id) {
-      id = prompt("Bot ID (optional):");
-    }
-    if (!key) {
-      key = prompt("Bot public key (optional):");
-    }
+    const parsed = parseString(
+      (await res.text()).replaceAll(/(#.+)|\n/g, ""),
+    );
+    const envVars = await inquirer.prompt(
+      Object.entries(parsed).map(([k, v]) => ({
+        message: k,
+        name: k,
+        type: "input",
+        default: v,
+      })),
+    );
+
     const mkdirLoader = ora(`Creating files for project: ${name}`).start();
 
     async function createFiles(path: string, dest: string) {
@@ -100,12 +129,17 @@ program
             if (!fileRes.ok) {
               throw new Error(fileRes.statusText);
             }
-            let fileContents = await fileRes.text();
-            let destPath = join(dest, file.name);
-            if (file.name === ".env.example" && (token || id || key)) {
-              fileContents =
-                `DISCORD_TOKEN="${token}"\nDISCORD_APP_ID="${id}"\nDISCORD_PUBLIC_KEY="${key}"`;
-              destPath = join(dest, ".env");
+            const fileContents = await fileRes.text();
+            const destPath = join(dest, file.name);
+            if (file.name === ".env.example") {
+              const destPath = join(dest, ".env");
+              Deno.mkdirSync(dirname(destPath), { recursive: true });
+              Deno.writeTextFileSync(
+                destPath,
+                Object.entries(envVars).map(([k, v]) => `${k}="${v}"`).join(
+                  "\n",
+                ),
+              );
             }
             Deno.mkdirSync(dirname(destPath), { recursive: true });
             Deno.writeTextFileSync(destPath, fileContents);
@@ -116,7 +150,7 @@ program
 
     try {
       const path =
-        `https://api.github.com/repos/Inbestigator/dressed-examples/contents/${template}`;
+        `https://api.github.com/repos/inbestigator/dressed-examples/contents/${template}`;
 
       await createFiles(path, join(cwd(), name));
     } catch {
